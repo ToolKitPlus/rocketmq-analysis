@@ -1,15 +1,16 @@
 # Redisson 分布式锁源码解读指南
 
-本目录包含 **Redisson 分布式锁源码逐行解析** 文档，以 PDF 形式输出，适合在手机端查看（代码字体较小，避免过度换行）。
+本目录包含 **Redisson 分布式锁源码逐行解析** 文档，以 EPUB 形式输出，适合在手机 / 电子书阅读器查看。
+每个核心方法均附有「整体设计思想」说明，帮助读者深入理解 Redisson 的设计决策与权衡。
 
 ## 文件说明
 
 | 文件 | 说明 |
 |------|------|
-| `Redisson_Lock_Source_Analysis.pdf` | 生成好的源码解读 PDF（17 页，A4 格式） |
-| `generate_pdf.py` | PDF 生成脚本（Python 3 + reportlab） |
+| `Redisson_Lock_Source_Analysis.epub` | 生成好的源码解读 EPUB（可直接用手机/Kindle/iBooks 打开） |
+| `generate_epub.py` | EPUB 生成脚本（Python 3 + ebooklib） |
 
-## PDF 内容目录
+## EPUB 内容目录
 
 | 章节 | 主要内容 |
 |------|----------|
@@ -64,18 +65,18 @@ else
 end
 ```
 
-## 重新生成 PDF
+## 重新生成 EPUB
 
 ```bash
 # 安装依赖
-pip3 install reportlab
+pip3 install ebooklib
 
-# 生成 PDF
-python3 generate_pdf.py
+# 生成 EPUB
+python3 generate_epub.py
 ```
 
-> **注意**：中文字符需要系统安装 Noto CJK 字体（Ubuntu: `apt install fonts-noto-cjk`）。
-> 若未安装中文字体，中文将以拉丁字符替代显示，但 PDF 结构和代码内容完整。
+> **注意**：EPUB 内嵌 CSS 字体声明，阅读器只需支持 CJK 字体即可正常显示中文。
+> 大多数现代阅读器（Kindle、iBooks、微信读书等）均支持直接打开 `.epub` 文件。
 
 ## 版本参考
 
