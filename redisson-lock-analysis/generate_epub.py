@@ -189,7 +189,7 @@ def p(text):
 def chapter_cover():
     return (
         '<div class="cover-title">Redisson 分布式锁<br/>源码解读指南</div>\n'
-        '<div class="cover-sub">\u2014\u2014 加锁 \xb7 解锁 \xb7 Watchdog 逐行注解 \u2014\u2014</div>\n'
+        '<div class="cover-sub">———— 加锁 · 解锁 · Watchdog 逐行注解 ————</div>\n'
         '<div class="cover-ver">版本参考：Redisson 3.x（基于 Redis 单机 / 集群）</div>\n'
         "<hr/>\n"
         '<p class="comment">本文档基于 Redisson 3.x 源码整理，'
@@ -279,7 +279,7 @@ PEXPIRE my-lock 30000"""
     out += pre(code_fields)
     out += tip("UUID 在 Redisson 客户端启动时生成，每个 JVM 实例唯一，"
                "配合 threadId 共同标识锁的持有者，"
-               "解决了分布式场景下\u300c谁持有锁\u300d的身份认证问题。")
+               "解决了分布式场景下「谁持有锁」的身份认证问题。")
     out += h(2, "1.2 Redis 中锁的数据结构")
     out += p("Redisson 普通锁使用 Redis <strong>Hash</strong> 存储，Key 为锁名，Field 为 "
              "<code>UUID:threadId</code>，Value 为可重入次数：")
@@ -287,7 +287,7 @@ PEXPIRE my-lock 30000"""
     out += design(
         "用 Hash 代替 String 存锁",
         "传统 SETNX/SET NX 方案用 String 存储持锁者标识，"
-        "无法在单个 Key 内同时记录\u300c谁持有\u300d和\u300c重入次数\u300d两个维度的信息。",
+        "无法在单个 Key 内同时记录「谁持有」和「重入次数」两个维度的信息。",
         "Redisson 选用 Hash：Field = UUID:threadId（身份），Value = 重入计数（状态）。"
         "同一 Key 下可用 HINCRBY 原子加减计数，天然支持可重入语义，"
         "且 HEXISTS 可在 O(1) 时间内校验持锁身份。",
@@ -450,7 +450,7 @@ private <T> RFuture<Long> tryAcquireAsync(long waitTime, long leaseTime,
                "等锁期间不轮询 Redis，资源效率更高。")
     out += design(
         "Pub/Sub + Semaphore 替代自旋轮询",
-        "朴素的分布式锁等待方案是\u300c加锁失败 \u2192 sleep \u2192 重试\u300d，"
+        "朴素的分布式锁等待方案是「加锁失败 → sleep → 重试」，"
         "这会造成大量无效 Redis 请求（惊群效应），在高并发竞争场景下性能极差。",
         "Redisson 借鉴 JUC AQS 的条件等待思想：加锁失败时，"
         "通过 Redis Pub/Sub 订阅解锁 channel，"
@@ -470,7 +470,7 @@ private <T> RFuture<Long> tryAcquireAsync(long waitTime, long leaseTime,
         "锁的生命周期由用户承担，适合已知最大执行时间的场景。",
         "对于后者，先以默认 30s 加锁（保证 Redis 中锁必然有 TTL 兜底，"
         "防止进程崩溃时死锁），加锁成功后再启动 Watchdog 持续续期。"
-        "这一\u300c先设 TTL 兜底、后续期维持\u300d的两段式设计，"
+        "这一「先设 TTL 兜底、后续期维持」的两段式设计，"
         "在安全性（不会永久占锁）和活性（不会因超时提前释放）之间取得了最佳平衡。",
     )
     out += h(2, "2.3 tryLockInnerAsync — Lua 原子加锁")
@@ -485,10 +485,10 @@ private <T> RFuture<Long> tryAcquireAsync(long waitTime, long leaseTime,
                 "推荐使用无参 lock() 配合 Watchdog。")
     out += design(
         "Lua 脚本保证原子性——三分支状态机",
-        "加锁操作本质上是一个三分支状态机：\u2460 锁不存在 \u2192 新建并加锁；"
-        "\u2461 锁存在且自己持有 \u2192 可重入，计数 +1；"
-        "\u2462 锁存在但他人持有 \u2192 返回剩余 TTL（告知等待时间）。",
-        "这三个分支必须原子执行，否则在\u300c检查\u300d和\u300c设置\u300d之间"
+        "加锁操作本质上是一个三分支状态机：① 锁不存在 → 新建并加锁；"
+        "② 锁存在且自己持有 → 可重入，计数 +1；"
+        "③ 锁存在但他人持有 → 返回剩余 TTL（告知等待时间）。",
+        "这三个分支必须原子执行，否则在「检查」和「设置」之间"
         "可能有其他客户端插入，导致两个客户端同时认为自己加锁成功（ABA 竞态）。"
         "Redis 的 EVAL 命令保证 Lua 脚本以单线程方式原子执行，"
         "从根本上消除竞态。",
@@ -694,7 +694,7 @@ protected void cancelExpirationRenewal(Long threadId) {
         "造成并发安全问题；TTL 太长则进程崩溃后其他节点等待时间过长，可用性下降。",
         "Watchdog 打破了这一困境：锁的初始 TTL 固定为 30s（防崩溃死锁），"
         "但只要持锁进程存活，Watchdog 每 10s 续期一次，"
-        "使锁\u300c实际上永不过期\u300d直到业务主动 unlock。"
+        "使锁「实际上永不过期」直到业务主动 unlock。"
         "进程崩溃时 Watchdog 随之停止，锁在最多 30s 后自动释放，兜底安全。",
         "续期间隔选择 leaseTime/3 是工程权衡：续期过频浪费 Redis 带宽，"
         "过稀则在网络抖动时可能漏过一次续期导致锁意外过期。"
@@ -711,7 +711,7 @@ protected void cancelExpirationRenewal(Long threadId) {
         "重入时只在已有 Entry 中追加 threadId 记录。"
         "cancelExpirationRenewal 时检查 threadId 集合是否为空，"
         "只有最后一个持锁线程释放后才真正取消任务。",
-        "这一\u300c引用计数 + 单任务\u300d模式，有效控制了后台资源消耗。",
+        "这一「引用计数 + 单任务」模式，有效控制了后台资源消耗。",
     )
     out += h(2, "4.2 renewExpiration — 定时续期任务")
     out += pre(code_renew)
@@ -720,11 +720,11 @@ protected void cancelExpirationRenewal(Long threadId) {
         "续期任务需要在后台周期性执行。Redisson 选择了 Netty 的 "
         "HashedWheelTimer + 回调尾递归：续期成功后在回调内再次调用 "
         "renewExpiration() 注册下一个单次延迟任务，形成自驱动循环。",
-        "优势：\u2460 HashedWheelTimer 专为大量定时任务设计，"
+        "优势：① HashedWheelTimer 专为大量定时任务设计，"
         "内存和 CPU 开销远低于线程池定时器；"
-        "\u2461 每次续期都是\u300c上一次成功后\u300d才注册下一次，"
+        "② 每次续期都是「上一次成功后」才注册下一次，"
         "若 Redis 连接中断导致续期失败，任务链自然断裂，不会继续无意义重试（fail-fast）；"
-        "\u2462 全程基于 Netty 事件循环，不阻塞任何业务线程。",
+        "③ 全程基于 Netty 事件循环，不阻塞任何业务线程。",
     )
     out += h(2, "4.3 renewExpirationAsync — 续期 Lua 脚本")
     out += pre(code_renew_lua)
@@ -876,9 +876,9 @@ public class LockPubSub extends PublishSubscribeService {
         "cancelExpirationRenewal 在 handle 回调中，"
         "无论解锁 Lua 脚本成功还是失败（Redis 异常），都会被第一时间调用。",
         "这是防御性设计：哪怕解锁失败（如网络超时），Watchdog 也必须停止续期，"
-        "避免已\u300c逻辑解锁\u300d的场景中 Watchdog 仍在为一把\u300c僵尸锁\u300d续期，"
+        "避免已「逻辑解锁」的场景中 Watchdog 仍在为一把「僵尸锁」续期，"
         "导致其他节点无法在 TTL 内获得锁。",
-        "这体现了\u300c最终一致性优先\u300d的工程哲学："
+        "这体现了「最终一致性优先」的工程哲学："
         "宁可让锁稍早过期（靠 TTL 兜底），也不能让续期线程逃逸生命周期边界。",
     )
     out += h(2, "5.2 unlockInnerAsync — Lua 原子解锁")
@@ -957,12 +957,12 @@ return redis.call('pttl', KEYS[1])"""
         "节点在 JVM 内存中，入队/出队是本地操作。"
         "分布式公平锁需要在多个 JVM 进程间共享等待序列，不能用内存队列。",
         "Redisson 用三个 Redis 数据结构协同工作："
-        "\u2460 Hash（持锁者 + 重入计数）；"
-        "\u2461 List（有序等待队列，RPUSH 入队、LPOP 出队，严格 FIFO）；"
-        "\u2462 ZSet（各等待者的超时时间戳）。"
+        "① Hash（持锁者 + 重入计数）；"
+        "② List（有序等待队列，RPUSH 入队、LPOP 出队，严格 FIFO）；"
+        "③ ZSet（各等待者的超时时间戳）。"
         "每次加锁前先从 List/ZSet 清理已超时的等待者，防止超时节点永久阻塞队列。",
         "这种多结构联合事务由单个 Lua 脚本原子完成，"
-        "保证\u300c清理超时者→判断队首→加锁 or 入队\u300d整个流程不被并发干扰。"
+        "保证「清理超时者→判断队首→加锁 or 入队」整个流程不被并发干扰。"
         "代价是 Lua 脚本更复杂，加锁延迟略高于普通锁。",
     )
     out += h(2, "6.1 数据结构")
