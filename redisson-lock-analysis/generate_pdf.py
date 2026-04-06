@@ -129,10 +129,10 @@ def build_styles(cn_font):
         spaceAfter=4,
     )
 
-    # 代码块（关键：字体小，适合手机查看不换行）
+    # 代码块（关键：字体小，适合手机查看不换行；使用中文字体以支持代码注释中的中文）
     styles["Code"] = ParagraphStyle(
         "Code",
-        fontName="Courier",
+        fontName=body_font,
         fontSize=7,           # 代码字体较小，手机友好
         leading=10,
         backColor=colors.HexColor("#f5f5f5"),
@@ -285,6 +285,8 @@ def build_content(styles):
     toc_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0d47a1")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, -1), styles["_body_font"]),
+        ("FONTNAME", (0, 0), (-1, 0), styles["_bold_font"]),
         ("FONTSIZE", (0, 0), (-1, 0), 9),
         ("FONTSIZE", (0, 1), (-1, -1), 8),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#e8eaf6")]),
@@ -322,6 +324,8 @@ def build_content(styles):
     arch_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1565c0")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, -1), styles["_body_font"]),
+        ("FONTNAME", (0, 0), (-1, 0), styles["_bold_font"]),
         ("FONTSIZE", (0, 0), (-1, 0), 8.5),
         ("FONTSIZE", (0, 1), (-1, -1), 7.5),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#e3f2fd")]),
@@ -1122,6 +1126,8 @@ public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit)
     qa_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4a148c")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, -1), styles["_body_font"]),
+        ("FONTNAME", (0, 0), (-1, 0), styles["_bold_font"]),
         ("FONTSIZE", (0, 0), (-1, 0), 9),
         ("FONTSIZE", (0, 1), (-1, -1), 7.5),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f3e5f5")]),
@@ -1194,9 +1200,10 @@ public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit)
     cmd_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#004d40")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTNAME", (0, 0), (-1, -1), styles["_body_font"]),
+        ("FONTNAME", (0, 0), (-1, 0), styles["_bold_font"]),
         ("FONTSIZE", (0, 0), (-1, 0), 8),
         ("FONTSIZE", (0, 1), (-1, -1), 7),
-        ("FONTNAME", (0, 0), (-1, 0), styles["_bold_font"]),
         ("FONTNAME", (0, 1), (0, -1), "Courier"),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#e0f2f1")]),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#80cbc4")),
