@@ -17,11 +17,12 @@ from reportlab.platypus import (
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 
 
-# ── 字体注册（尽量使用系统中文字体，fallback 到内置字体）──────────────────────
+# ── 字体注册（尽量使用系统中文字体，fallback 到 ReportLab 内置 CJK 字体）─────
 def register_fonts():
-    """注册中文字体，优先使用系统字体"""
+    """注册中文字体，优先使用系统字体，fallback 到 ReportLab 内置 CJK CID 字体"""
     font_paths = [
         # Ubuntu / Debian
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
@@ -45,15 +46,32 @@ def register_fonts():
                 return "ChineseFont"
             except Exception:
                 continue
-    return None  # 未找到中文字体，fallback 到 Helvetica
+
+    # Fallback: ReportLab 内置简体中文 CID 字体，无需外部字体文件
+    try:
+        pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
+        return "STSong-Light"
+    except Exception:
+        pass
+
+    return None  # 未找到中文字体，fallback 到 Helvetica（中文将显示异常）
 
 
 def build_styles(cn_font):
     """构建 PDF 样式"""
     body_font = cn_font if cn_font else "Helvetica"
-    bold_font = (cn_font + "-Bold") if cn_font else "Helvetica-Bold"
+    # CID 字体（如 STSong-Light）无独立粗体变体，直接复用正文字体
+    if not cn_font:
+        bold_font = "Helvetica-Bold"
+    elif cn_font == "ChineseFont":
+        bold_font = "ChineseFont-Bold"
+    else:
+        bold_font = cn_font
 
     styles = {}
+    # 保存字体名称供内容构建函数使用
+    styles["_body_font"] = body_font
+    styles["_bold_font"] = bold_font
 
     # 文档标题
     styles["DocTitle"] = ParagraphStyle(
@@ -183,6 +201,26 @@ def build_styles(cn_font):
         spaceAfter=1,
     )
 
+    # 封面副标题（含中文，须使用已注册的中文字体）
+    styles["Subtitle"] = ParagraphStyle(
+        "Subtitle",
+        fontName=body_font,
+        fontSize=11,
+        alignment=TA_CENTER,
+        textColor=colors.HexColor("#546e7a"),
+        leading=18,
+    )
+
+    # 封面版本信息（含中文，须使用已注册的中文字体）
+    styles["Version"] = ParagraphStyle(
+        "Version",
+        fontName=body_font,
+        fontSize=8,
+        alignment=TA_CENTER,
+        textColor=colors.grey,
+        leading=12,
+    )
+
     return styles
 
 
@@ -225,15 +263,9 @@ def build_content(styles):
     story.append(Spacer(1, 30 * mm))
     story.append(Paragraph("Redisson 分布式锁源码解读指南", styles["DocTitle"]))
     story.append(Spacer(1, 4 * mm))
-    story.append(Paragraph("-- 加锁 · 解锁 · Watchdog 逐行注解 --", ParagraphStyle(
-        "subtitle", fontName="Helvetica", fontSize=11, alignment=TA_CENTER,
-        textColor=colors.HexColor("#546e7a"), leading=18,
-    )))
+    story.append(Paragraph("-- 加锁 · 解锁 · Watchdog 逐行注解 --", styles["Subtitle"]))
     story.append(Spacer(1, 6 * mm))
-    story.append(Paragraph("版本参考: Redisson 3.x (基于 Redis 单机/集群)", ParagraphStyle(
-        "ver", fontName="Helvetica", fontSize=8, alignment=TA_CENTER,
-        textColor=colors.grey, leading=12,
-    )))
+    story.append(Paragraph("版本参考: Redisson 3.x (基于 Redis 单机/集群)", styles["Version"]))
     story.append(PageBreak())
 
     # ── 目录 ─────────────────────────────────────────────────────
@@ -1098,7 +1130,7 @@ public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit)
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("FONTNAME", (0, 1), (0, -1), "Helvetica-Bold"),
+        ("FONTNAME", (0, 1), (0, -1), styles["_bold_font"]),
     ]))
     story.append(qa_table)
     story.append(Spacer(1, 6 * mm))
@@ -1164,7 +1196,7 @@ public boolean tryLock(long waitTime, long leaseTime, TimeUnit unit)
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("FONTSIZE", (0, 0), (-1, 0), 8),
         ("FONTSIZE", (0, 1), (-1, -1), 7),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("FONTNAME", (0, 0), (-1, 0), styles["_bold_font"]),
         ("FONTNAME", (0, 1), (0, -1), "Courier"),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#e0f2f1")]),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#80cbc4")),
